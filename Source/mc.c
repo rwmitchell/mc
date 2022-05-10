@@ -93,7 +93,8 @@ int *line_lengths2( char *buf ) {     // calculate without pre-filtering
        nl_cnt = RMfs_cnt( buf, nl );
 
   int state = 0,
-      len   = 0;
+      len   = 0,
+      wlen  = 0;
 
   arr = (int *) RMmalloc( arr, sizeof( int ) * nl_cnt );
 
@@ -107,11 +108,14 @@ int *line_lengths2( char *buf ) {     // calculate without pre-filtering
       state = 0;
     }
 
-    if ( !state && ( (*pbuf & 0377) < 0200 ) ) len++;  // don't count wide chars
+    if ( !state ) {
+      if ( (*pbuf & 0377) < 0200 ) len++;      // count normal chars
+      else                         wlen++;     // count wide   chars as 1/2
+    }
 
     if ( *pbuf == nl ) {
-      arr[i++] = len-1;        // don't count newline
-      len = 0;
+      arr[i++] = (len + (wlen/2 ) ) -1;        // don't count newline
+      len = wlen = 0;
     }
     pbuf++;
   }
