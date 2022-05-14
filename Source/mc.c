@@ -13,6 +13,13 @@
 // #include <mylib.h>
 
 const
+char *gitid = "$Id: 1d1e327ab79af1f29dbdb02fe5be7acb6fe4d828 $",
+     *myid  = "$MyId: prism 2022-05-08 18:33:13 -0400  (HEAD -> main) 00b6e54 $",
+     *date  = "$Date: 2022-05-08 18:33:13 -0400 $",
+     *source= "$Source: /Users/rwmitchell/git/GitHub/prism $",
+     *auth  = "$Auth: Richard Mitchell <rwmitchell@gmail.com> $";
+
+const
 char *cvsid = "$Id: mytools mc.c default e9eca572cf25 2021-12-26 15:43:30Z rwmitchell $";
 
 const char *TF[]= {"False", "True"};
@@ -158,7 +165,7 @@ void one_line     ( const char *progname ) {
 void help         ( char *progname, const char *opt, struct option lopts[] ) {
 
   STDERR("%s %s\n", __DATE__, __TIME__ );
-  STDERR("%s\n\n", cvsid);
+  STDERR("%s\n%s\n\n", gitid, source );
   STDERR("usage: %s [-%s] [FILE]\n", progname, opt);
   STDERR("Print stdin in multiple columns\n");
   STDERR("\n");
@@ -201,6 +208,7 @@ int main(int argc, char *argv[]) {
     { "debug",     optional_argument, NULL, 'd' },
     { "onlystrip",       no_argument, NULL, 'S' },
     { "width",     required_argument, NULL, 'w' },  // override COLUMNS
+    { "version",         no_argument, NULL, 201 },
     { "help",            no_argument, NULL, 'h' },
     { "usage",           no_argument, NULL, 'u' },
     { "oneline",         no_argument, NULL, '1' },
@@ -279,6 +287,15 @@ int main(int argc, char *argv[]) {
       case 'm': mrow    = strtol( optarg, NULL, 10 ); break;
       case 'w': wdth    = strtol( optarg, NULL, 10 ); break;
       case 'c': wbuf    = strtol( optarg, NULL, 10 ); break;
+
+      case 201:
+                STDOUT( "%s\n", gitid       );
+                STDOUT( "%s\n", myid        );
+                STDOUT( "%s\n", source      );
+                STDOUT( "%s\n", date        );
+                STDOUT( "%s\n", auth        );
+                exit(0);
+                break;
 
       case 'd':                      // set debug level
         if ( B_have_arg ) {
