@@ -1,37 +1,14 @@
+# $Id$
 # Makefile
 
-CC_DEBUG_FLAGS    =-g3 -DDEBUG_ALL
+CC_DEBUG_FLAGS    = -g3 -DDEBUG_ALL
 CC_CHECK_FLAGS    = --analyzer-output text --analyze -I$(SRC)
-CC_RELEASE_FLAGS  = 
+CC_RELEASE_FLAGS  = -O3
 
 RLS  = release
 DBG  = debug
 PTH := $(RLS)
 RUN  = all
-
-list:
-
-column = sed 's/ / 	/g' | tr ' |' '\n\n'
-
-
-DIR = $(shell basename $(CURDIR))
-BLD = ./Build
-INC = $(BLD)/include
-BAS = $(BLD)/$(PTH)/$(DIR)
-DEP = $(BAS)/.dep
-
-DST = $(BAS)/bin
-OBJ = $(BAS)/obj
-LIB = $(BAS)/lib
-
-# Override this on the cmdline with: make prefix=/some/where/else
-prefix = $(BLD)
-
-SRC = Source
-NST = $(prefix)/bin
-
-MYINC = -I$(BLD)/include -I$(SRC)
-# MYLIB = -L$(BLD)/lib -lmylib
 
 .PHONY: check
 check: CFLAGS = $(CC_CHECK_FLAGS)
@@ -51,95 +28,126 @@ release: CFLAGS += $(CC_RELEASE_FLAGS) $(MYINC)
 release: PTH    := $(RLS)
 release: make_it
 
+# single column - 'column' has an input limit
+scolumn = sed 's/ / 	/g' | tr -d '\n' | tr ' |' '\n\n'
+columns = $(scolumn) | column -c 80
 
-# Additional object files used with other programs
-OBJ_FILES = \
-	$(OBJ)/io.o       \
-	$(OBJ)/loadfile.o \
-	$(OBJ)/strings.o  \
-	$(OBJ)/utils.o    \
-	$(OBJ)/malloc.o   \
-	$(OBJ)/helpd.o    \
+# Check if git exists
+# If it does, get the current branch
+# if it does and branch != main, add branch to DIR
+# else leave DIR alone
+
+GIT_VERSION := $(shell git --version 2>/dev/null)
+# $(warning GIT $(GIT_VERSION) )
+
+DIR  = $(shell basename $(CURDIR))
+ifdef GIT_VERSION
+	BCH := $(shell git branch --show-current)
+	BCH := $(if $(BCH),$(BCH),"TEST")
+#	BCH := $(shell echo main)
+	ifeq ($(BCH),main)                   # Lack of whitespace is intentional
+	else
+		DIR     := $(DIR)-$(BCH)
+	endif
+endif
 
 
-NEEDSXTRA  =         \
-	$(DST)/mc          \
+# Override this on the cmdline with: make buildroot=/some/where/else
+# base for all compiler output
+buildroot = .
 
-# All C programs
-DST_PROGS =          \
-	$(DST)/mc          \
+BLD = $(buildroot)/Build
+INC = $(BLD)/include
+MCH = $(BLD)/$(MACHTYPE)
+BAS = $(MCH)/$(PTH)/$(DIR)
+DEP = $(MCH)/.dep/$(DIR)
 
-# All Scripts (basename, no extensions ie: foo, not foo.pl)
-DST_SCRPT =          \
+DST = $(BAS)/bin
+OBJ = $(BAS)/obj
+LIB = $(BAS)/lib
 
+# Override this on the cmdline with: make prefix=/some/where/else
+# install path
+prefix = $(BLD)
+
+SRC = Source
+NST = $(prefix)/bin
+
+MYINC = -I$(BLD)/include -I$(SRC)
+# MYLIB = -L$(BLD)/lib -lmylib
 
 DIRS =    \
 	$(DEP)  \
 	$(OBJ)  \
 	$(BAS)  \
 	$(DST)  \
-	$(NST)  \
+	$(NST)
 
+# Optimistic selection
+ALL_SRC  = $(wildcard $(SRC)/*.c)
+
+# Realistic  selection
+# ALL_SRC        \
+#	$(SRC)/mc.c \
+
+ALL_OBJ := $(ALL_SRC:%.c=%.o)
+ALL_OBJ := $(ALL_OBJ:$(SRC)/%=$(OBJ)/%)
+
+# source files for mc
+MC_SRC =            \
+	$(SRC)/mc.c       \
+	$(SRC)/io.c       \
+	$(SRC)/loadfile.c \
+	$(SRC)/strings.c  \
+	$(SRC)/utils.c    \
+	$(SRC)/malloc.c   \
+	$(SRC)/helpd.c
+
+MC_OBJ := $(MC_SRC:%.c=%.o)
+MC_OBJ := $(MC_OBJ:$(SRC)/%=$(OBJ)/%)
+
+# All C programs
+DST_PROGS =         \
+	$(DST)/mc
+
+$(DST_PROGS): $(MC_OBJ)
+	@ printf "\n"
+	@ printf "Making: %s\n" "$@"
+	@ printf "From: :\t"; printf "$^" | $(scolumn)
+	@ printf "\n\n"
+	@ $(CC) -o $@ $^ $(MYLIB) -lm
+	@ printf "\n"
+
+$(OBJ)/%.o	:	$(SRC)/%.c $(DEP)/%.d
+	@ echo "|Making_OBJ:$@ $^ " | $(scolumn)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+NST_PROGS = $(subst $(DST),$(NST),$(DST_PROGS))
 
 $(NST)/%: $(DST)/%
 	install -m ugo+rx $< $@
 
-$(DST)/mc  : $(DST)/% : $(OBJ)/%.o $(OBJ_FILES)
-	$(CC) -o $@ $^ $(MYLIB) -lm
-
-
-NOMATH := $(filter-out $(NEEDSXTRA), $(NOMATH))
-
-# $(filter-out $(NEEDSMATH), $(DST_PROGS)):	$(DST)/%:	$(OBJ)/%.o
-$(NOMATH):	$(DST)/% : $(OBJ)/%.o $(OBJ_FILES)
-	$(CC) -o $@ $^ $(MYLIB)
-
-$(OBJ)/%.o	:	$(SRC)/%.c $(DEP)/%.d
-	@ echo "|Making_OBJ:$@ $^ " | $(column)
-	$(CC) $(CFLAGS) -c $< -o $@
-
-#$(OBJ)/%.o:	$(SRC)/%.c
-#	$(CC) -c $(CFLAGS) -I$(SRC) -o $@ $^
-
-$(NEEDSMATH):	$(DST)/% : $(OBJ)/%.o
-	$(CC) -o $@ $< $(OBJ_FILES) -lm $(MYLIB)
-
-NST_PROGS = $(subst $(DST), $(NST), $(DST_PROGS))
-NST_SCRPT = $(subst $(DST), $(NST), $(DST_SCRPT))
-
 .PHONY: install real_install help
 
 list:
-	@echo all allsu install
+	@echo "debug release"
+	@echo "all install"
+	@echo "help help_install"
 	@echo $(DST_PROGS)
-	@echo $(DST_SCRPT)
-#@echo $(NST_PROGS)
-#@echo $(NST_SCRPT)
 
 all: \
 	$(DIRS)       \
-	$(OBJ_FILES)  \
+	$(MC_OBJ)     \
 	$(DST_PROGS)  \
-	$(DST_SCRPT)  \
 	tags types    \
 	show_install  \
-
-allsu: \
-	$(NEEDSSUID)  \
 
 install: real_install
 	@true
 
-installsu: real_installsu
-	@true
-
-real_install:        \
+real_install:   \
 	$(NST)        \
-	$(NST_SCRPT)  \
 	$(NST_PROGS)  \
-
-real_installsu:       \
-	$(NST)/sucmd  \
 
 $(DIRS):
 	mkdir -p $@
@@ -149,32 +157,53 @@ show_install:
 	@echo "These programs need to be installed:"
 	@make -sn install
 
-help:
-	@make -sn
-	@echo "These programs are made:"
-	@echo $(DST_PROGS) | tr ' ' '\n'
-	@echo $(DST_SCRPT) | tr ' ' '\n'
-	@echo
-	@echo "Try: make install"
+vars:
+	@ printf "Platform: %s - %s\n" $(OS) $(MACHTYPE)
+	@ printf "\nOBJ :\t%s" $(OBJ)
+	@ printf "\nDST :\t%s" $(DST)
+	@ printf "\nNST :\t%s" $(NST)
+	@ printf "\nSRC :\t%s" $(SRC)
+	@ printf "\nSRC :\t"; printf "$(ALL_SRC)"   | $(scolumn); printf "\n"
+	@ printf "\nDEP :\t"; printf "$(ALL_DEP)"   | $(scolumn); printf "\n"
+	@ printf "\nOBJ :\t"; printf "$(ALL_OBJ)"   | $(scolumn); printf "\n"
+	@ printf "\nDIR :\t"; printf "$(DIRS)"      | $(scolumn); printf "\n"
+	@ printf "\nDST :\t"; printf "$(DST_PROGS)" | $(scolumn); printf "\n"
+	@ printf "\nNST :\t"; printf "$(NST_PROGS)" | $(scolumn); printf "\n"
+
+help: real_help help_install
+
+real_help:
+	@ printf "\nUse: '-buildroot=$(buildroot)' to specify build root"
+	@ printf "\nUse: '-prefix=$(prefix)' to specify install root"
+	@ printf "\nUse: 'make vars' : to show all paths\n"
+	@ printf "\nmake release\n"
+	@ printf "\nDST:\t"; printf "$(DST_PROGS)" | $(scolumn); printf "\n"
+	@ make -sn
+	@ echo "These programs are made:"
+	@ echo $(DST_PROGS) | tr ' ' '\n'
+	@ echo
+	@ echo "Try: make install"
 
 help_install:
-	@echo "These programs are installed:"
-	@echo
-	@echo $(NST_PROGS) | tr ' ' '\n'
-	@echo $(NST_SCRPT) | tr ' ' '\n'
-	@echo
+	@ printf "\nmake install\n"
+	@ printf "\nNST:\t"; printf "$(NST_PROGS)" | $(scolumn); printf "\n"
+	@ printf "\nThese programs need to be installed:\n"
+	@ make -sn install
+	@ echo
 
 clean:
-	$(RM) $(DEP)/*.d $(OBJ)/*.o $(DST_PROGS) $(DST_SCRPT)
-	rmdir $(OBJ) $(DST)
+	@ printf "\n$(RM):\t"; printf "$(ALL_DEP)"    | $(scolumn); printf "\n"
+	@ printf "\n$(RM):\t"; printf "$(ALL_OBJ)"    | $(scolumn); printf "\n"
+	@ printf "\nrmdir:\t"; printf "$(DEP) $(OBJ)" | $(scolumn); printf "\n"
+	$(RM) $(ALL_DEP) $(ALL_OBJ)
+	rmdir $(DEP) $(OBJ) $(DST)
+	$(RM) $(DEP)/*.d $(OBJ)/*.o $(DST_PROGS)
 
 foo:
 	@ echo "OBJ  " $(OBJ)
 	@ echo "SRC  " $(SRC)
-	@ echo "SUID " $(NEEDSSUID)
-	@ echo "obj  " $(OBJ_FILES)
+	@ echo "obj  " $(MC_OBJ)
 	@ echo "HOST " $(HOST)
-	@ echo "NSTS " $(NST_SCRPT) | $(column)
 
 .analyze: $(wildcard $(SRC)/*.c)
 	gcc $(CFLAGS) $?
@@ -184,22 +213,25 @@ make_check_all:
 	@ rm .analyze  || true
 	@ make CFLAGS="$(CFLAGS)" check
 
-
 make_it:
-	make PTH=$(PTH) CFLAGS="$(CFLAGS)" $(RUN)
+	@ echo "make_it: "$(CFLAGS)
+	@ echo make PTH=$(PTH) CFLAGS="$(CFLAGS)" $(RUN)
+	@ make PTH=$(PTH) CFLAGS="$(CFLAGS)" $(RUN)
+
+
+######################################
 
 #We don't need to clean up when we're making these targets
 NODEPS:=clean tags svn install
-#Find all the C++ files in the $(SRC)/ directory
-SOURCES:=$(shell find $(SRC)  -name "*.c")
+
 #These are the dependency files, which make will clean up after it creates them
-DEPFILES:=$(patsubst %.c,%.d,$(patsubst $(SRC)/%,$(DEP)/%, $(SOURCES)))
+ALL_DEP:=$(patsubst %.c,%.d,$(patsubst $(SRC)/%,$(DEP)/%, $(ALL_SRC)))
 
 #Don't create dependencies when we're cleaning, for instance
 ifeq (0, $(words $(findstring $(MAKECMDGOALS), $(NODEPS))))
     #Chances are, these files don't exist.  GMake will create them and
     #clean up automatically afterwards
-    -include $(DEPFILES)
+    -include $(ALL_DEP)
 endif
 
 #This is the rule for creating the dependency files
@@ -209,8 +241,6 @@ $(DEP)/%.d: $(SRC)/%.c $(DEP)
 	$(CC) $(CFLAGS) -MG -MM -MT '$(patsubst $(SRC)/%,$(OBJ)/%, $(patsubst %.c,%.o,$<))' $(MYINC) $< > $@
 	@echo "END   DEP: $@"
 # End of - Dependency code added here
-
-# Make a highlight file for types.  Requires Exuberant ctags and awk
 
 # Make a highlight file for types.  Requires Universal ctags and awk
 types: $(SRC)/.types.vim
