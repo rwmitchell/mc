@@ -127,7 +127,7 @@ NST_PROGS = $(subst $(DST),$(NST),$(DST_PROGS))
 $(NST)/%: $(DST)/%
 	install -m ugo+rx $< $@
 
-.PHONY: install real_install help
+.PHONY: install help help_install
 
 list:
 	@echo "debug release"
@@ -140,22 +140,14 @@ all: \
 	$(MC_OBJ)     \
 	$(DST_PROGS)  \
 	tags types    \
-	show_install  \
+	help_install  \
 
-install: real_install
-	@true
-
-real_install:   \
+install:        \
 	$(NST)        \
 	$(NST_PROGS)  \
 
 $(DIRS):
 	mkdir -p $@
-
-show_install:
-	@echo ""
-	@echo "These programs need to be installed:"
-	@make -sn install
 
 vars:
 	@ printf "Platform: %s - %s\n" $(OS) $(MACHTYPE)
@@ -178,11 +170,7 @@ real_help:
 	@ printf "\nUse: 'make vars' : to show all paths\n"
 	@ printf "\nmake release\n"
 	@ printf "\nDST:\t"; printf "$(DST_PROGS)" | $(scolumn); printf "\n"
-	@ make -sn
-	@ echo "These programs are made:"
-	@ echo $(DST_PROGS) | tr ' ' '\n'
-	@ echo
-	@ echo "Try: make install"
+	@ make -sn release
 
 help_install:
 	@ printf "\nmake install\n"
