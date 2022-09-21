@@ -13,14 +13,14 @@
 // #include <mylib.h>
 
 const
-char *gitid = "$Id: 1d1e327ab79af1f29dbdb02fe5be7acb6fe4d828 $",
-     *myid  = "$MyId: prism 2022-05-08 18:33:13 -0400  (HEAD -> main) 00b6e54 $",
-     *date  = "$Date: 2022-05-08 18:33:13 -0400 $",
-     *source= "$Source: /Users/rwmitchell/git/GitHub/prism $",
-     *auth  = "$Auth: Richard Mitchell <rwmitchell@gmail.com> $";
+char *gitid = "$Id$",
+     *myid  = "$MyId$",
+     *date  = "$Date$",
+     *source= "$Source$",
+     *auth  = "$Auth$";
 
 const
-char *cvsid = "$Id: mytools mc.c default e9eca572cf25 2021-12-26 15:43:30Z rwmitchell $";
+char *cvsid = "$Id$";
 
 const char *TF[]= {"False", "True"};
 
