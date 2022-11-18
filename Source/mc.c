@@ -29,7 +29,8 @@ char myarg[1024],   // temporary optarg value
 int  debug =  0,
      mrow  =  5,
      wdth  = 80,
-     wbuf  =  3;    // white spacing between columns
+     wbuf  =  3,    // white spacing between columns
+     Mcol  =  9;    // Max columns
 
 bool B_strip = false,   // strip and columnize
      B_onlys = false,   // strip only
@@ -175,6 +176,7 @@ void help         ( char *progname, const char *opt, struct option lopts[] ) {
   STDERR("  -w   (%5d) Override COLUMNS\n",                   wdth        );
   STDERR("  -m   (%5d) Set minimum lines to split\n",         mrow        );
   STDERR("  -c   (%5d) Set spacing between columns\n",        wbuf        );
+  STDERR("  -C   (%5d) Set maximum columns\n",                Mcol        );
   STDERR("  -d  [0x%04x] Debug level\n", debug );
   STDERR("               use 0x0200 to invoke malloc_debug\n");
   STDERR("\n");
@@ -199,11 +201,12 @@ int main(int argc, char *argv[]) {
   extern char *optarg;
 
   const
-  char *opts=":bc:m:sd:Sw:uh1";      // Leading : makes all :'s optional
+  char *opts=":bc:C:m:sd:Sw:uh1";      // Leading : makes all :'s optional
   static struct option longopts[] = {
     { "big",             no_argument, NULL, 'b' },  // use columns if input > term rows
     { "minimum",   required_argument, NULL, 'm' },  // minimum lines to split
-    { "colbuf",    required_argument, NULL, 'c' }, // Spacing between columns
+    { "colbuf",    required_argument, NULL, 'c' },  // Spacing between columns
+    { "maxcols",   required_argument, NULL, 'C' },  // Max columns
     { "strip",           no_argument, NULL, 's' },
     { "debug",     optional_argument, NULL, 'd' },
     { "onlystrip",       no_argument, NULL, 'S' },
@@ -287,6 +290,7 @@ int main(int argc, char *argv[]) {
       case 'm': mrow    = strtol( optarg, NULL, 10 ); break;
       case 'w': wdth    = strtol( optarg, NULL, 10 ); break;
       case 'c': wbuf    = strtol( optarg, NULL, 10 ); break;
+      case 'C': Mcol    = strtol( optarg, NULL, 10 ); break;
 
       case 201:
                 STDOUT( "%s\n", gitid       );
@@ -372,6 +376,7 @@ int main(int argc, char *argv[]) {
   int col_sz[16] = { 0 },
       cols = B_colmn ? wdth  / (max_len - ((max_len/min_len/2) -1 )) : 1;
   cols = cols > 0 ? cols : 1;
+  cols = MIN( cols, Mcol );
   int rows = l_cnt / cols    + ( (l_cnt%cols) ? 1 : 0);
 
   if ( debug )
