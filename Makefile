@@ -101,6 +101,7 @@ MC_SRC =            \
 	$(SRC)/strings.c  \
 	$(SRC)/utils.c    \
 	$(SRC)/malloc.c   \
+	$(SRC)/bugout.c   \
 	$(SRC)/helpd.c
 
 MC_OBJ := $(MC_SRC:%.c=%.o)

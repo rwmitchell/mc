@@ -1,7 +1,7 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#ident "$Id: mylib utils.h default 6fb61d66b65c 2021-02-11 17:41:34Z rwmitchell $"
+#ident "$Id$"
 
 #include <stdio.h>     // off_t
 #include "types.h"

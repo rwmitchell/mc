@@ -1,7 +1,7 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-// $Id: types.h default 1ee110bcc216 2020/06/20 15:33:19 rwmitchell $
+// $Id$
 
 #define BIT_DEFS
 #ifdef  BIT_DEFS

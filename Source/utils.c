@@ -1,4 +1,4 @@
-#ident "$Id: mylib utils.c default 1e329d26c72d 2021-12-26 23:46:26Z rwmitchell $"
+#ident "$Id$"
 
 #include <stdio.h>
 #include <stdlib.h>    // strtol()

@@ -13,7 +13,9 @@
 #define _BLC             __FILE__,           __LINE__, __func__
 #endif
 
-char __dbuf[MAXNAMLEN],           // make name hidden/unique
+extern
+char __dbuf[MAXNAMLEN];           // make name hidden/unique
+char
      *RMtimer();
 #ifdef  __APPLE__
 #define BUGOUT( FMT, ... ) { \
