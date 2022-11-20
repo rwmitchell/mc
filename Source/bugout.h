@@ -15,8 +15,8 @@
 
 extern
 char __dbuf[MAXNAMLEN];           // make name hidden/unique
-char
-     *RMtimer();
+char *RMtimer();
+
 #ifdef  __APPLE__
 #define BUGOUT( FMT, ... ) { \
   fprintf(stdout, ":%s: %5d:%-24s:", basename_r(__FILE__, __dbuf), __LINE__, __func__ ); \
