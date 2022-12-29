@@ -1,4 +1,4 @@
-#ident "$Id: mylib io.c default d74c5a47408a 2021-02-11 16:26:05Z rwmitchell $"
+#ident "$Id$"
 
 #include <stdio.h>
 #include <stdlib.h>

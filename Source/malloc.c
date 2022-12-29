@@ -1,4 +1,4 @@
-#ident "$Id: mylib malloc.c default b4c53c1ce6ab 2021-12-27 00:01:33Z rwmitchell $"
+#ident "$Id$"
 
 #include <stdio.h>
 #include <stdlib.h>

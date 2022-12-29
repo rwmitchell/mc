@@ -1,7 +1,7 @@
 #ifndef IO_H
 #define IO_H
 
-#ident "$Id: mylib io.h default 5c7ca527220b 2021-01-06 11:47:38Z rwmitchell $"
+#ident "$Id$"
 
 #include <unistd.h>
 #include <sys/stat.h>

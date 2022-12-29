@@ -3,7 +3,7 @@
  * and then converting to array of strings
  */
 
-#ident "$Id: mylib loadfile.c default af8a97c423e5 2021-12-05 00:35:29Z rwmitchell $"
+#ident "$Id$"
 
 #include <stdio.h>
 #include <stdlib.h>

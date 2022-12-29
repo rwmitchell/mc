@@ -1,7 +1,7 @@
 #ifndef MALLOC_H
 #define MALLOC_H
 
-#ident "$Id: mylib malloc.h default 2423d79e4b35 2020-12-21 12:39:51Z rwmitchell $"
+#ident "$Id$"
 
 #include <stdlib.h>
 #include "bugout.h"
