@@ -43,11 +43,9 @@ int cleanbuf      ( char *buf ) {
        *nbuf   = buf;
 
   int state = 0,
-      olen  = 0,
       nlen  = 0;
 
   while ( *pbuf ) {
-    olen++;
     if ( *pbuf == '\033' ) {   // Escape Sequence starts
       state = 1;
     } else if ( state == 1 ) {
@@ -378,6 +376,12 @@ int main(int argc, char *argv[]) {
   cols = cols > 0 ? cols : 1;
   cols = MIN( cols, Mcol );
   int rows = l_cnt / cols    + ( (l_cnt%cols) ? 1 : 0);
+
+  // reduce # of columns until rows >= mrow
+  while ( rows < mrow && cols > 1 ) {
+    cols--;
+    rows = l_cnt / cols    + ( (l_cnt%cols) ? 1 : 0);
+  }
 
   if ( debug )
     BUGOUT( "%d:cols  %d:rows\n", cols, rows );
