@@ -18,15 +18,20 @@ void RMusage(struct option longopts[]) {
   if ( strcasestr( getenv("SHELL"), "zsh" ) != NULL ) B_zsh = true;
 
   for ( int i=0; longopts[i].name != NULL; ++i ) {
-    STDOUT("%s%s%s%s%s%c ",
+    STDOUT("%s%s%s%s",
       B_zsh ? "-" : "",
       longopts[i].name,
       longopts[i].has_arg == optional_argument ? "=" : "",
-      B_zsh ? "\n" : " ",
-      B_zsh ? "-" : "",
-      isprint(longopts[i].val) ? longopts[i].val : ' '
+      B_zsh ? "\n" : " "
     );
+
+    if ( isprint( longopts[i].val ) ) {
+      STDOUT( "%s%c",
+        B_zsh ? "-" : "",
+        longopts[i].val
+      )
     if ( B_zsh ) STDOUT("\n");
+  }
   }
   if ( !B_zsh ) STDOUT("\n");
   exit(0);
