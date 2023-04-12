@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>   // isspace()
+#include "malloc.h"
 #include "bugout.h"
 
 char *RMadjustl( char *str, int len ) {     // move leading whitespace to the right side
@@ -50,22 +51,19 @@ char *RMlower( char *str ) {
 }
 #ifdef __linux__
 char *RMstrcasestr( const char *haystack, const char *needle ) {
-  char *h = strdup( haystack ),
-       *n = strdup( needle   ),
+  char *h = RMstrdup( haystack ),
+       *n = RMstrdup( needle   ),
        *rv= NULL;
 
   h = RMlower( h );
   n = RMlower( n );
   char *p = strstr( h, n );   // find string using lowercase versions
 
-  STDOUT( "h: <%s>\n", h );
-  STDOUT( "n: <%s>\n", n );
   // find position in haystack using p - h offset
   if ( p ) rv = ( char * ) ( haystack + ( p-h ) );
 
-  STDOUT( "offset: %ld\n",  p-h );
-  STDOUT( "p: >%s<\n", p );
-  STDOUT( "r: >%s<\n", rv);
+  RMfree( h );
+  RMfree( n );
 
   return( rv );
 }
