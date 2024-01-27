@@ -30,7 +30,8 @@ int  debug =  0,
      mrow  =  5,
      wdth  = 80,
      wbuf  =  3,    // white spacing between columns
-     Mcol  =  9;    // Max columns
+     Mcol  =  9,    // Max columns
+     oset  =  0;    // offset first column
 
 bool B_strip = false,   // strip and columnize
      B_onlys = false,   // strip only
@@ -175,6 +176,7 @@ void help         ( char *progname, const char *opt, struct option lopts[] ) {
   STDERR("  -m   (%5d) Set minimum lines to split\n",         mrow        );
   STDERR("  -c   (%5d) Set spacing between columns\n",        wbuf        );
   STDERR("  -C   (%5d) Set maximum columns\n",                Mcol        );
+  STDERR("  -o   (%5d) Set first column offset\n",            oset        );
   STDERR("  -d  [0x%04x] Debug level\n", debug );
   STDERR("               use 0x0200 to invoke malloc_debug\n");
   STDERR("\n");
@@ -199,12 +201,13 @@ int main(int argc, char *argv[]) {
   extern char *optarg;
 
   const
-  char *opts=":bc:C:m:sd:Sw:uh1";      // Leading : makes all :'s optional
+  char *opts=":bc:C:m:o:sd:Sw:uh1";      // Leading : makes all :'s optional
   static struct option longopts[] = {
     { "big",             no_argument, NULL, 'b' },  // use columns if input > term rows
     { "minimum",   required_argument, NULL, 'm' },  // minimum lines to split
     { "colbuf",    required_argument, NULL, 'c' },  // Spacing between columns
     { "maxcols",   required_argument, NULL, 'C' },  // Max columns
+    { "offset",    optional_argument, NULL, 'o' },  // offset first column
     { "strip",           no_argument, NULL, 's' },
     { "debug",     optional_argument, NULL, 'd' },
     { "onlystrip",       no_argument, NULL, 'S' },
@@ -277,6 +280,8 @@ int main(int argc, char *argv[]) {
 //      B_have_arg = false;        // not read?  ( gcc --analyze -I ~/Build/include Source/mc.c )
         switch( optopt ) {
           case 'd': debug += dinc; /* BUGOUT("debug level: %d\n", debug ); */ dinc <<= 1; break;
+          case 'o': oset   =     4;
+                    break;
           default : BUGOUT("No arg for %c\n", optopt ); break;
         }
         break;
@@ -297,6 +302,16 @@ int main(int argc, char *argv[]) {
                 STDOUT( "%s\n", date        );
                 STDOUT( "%s\n", auth        );
                 exit(0);
+                break;
+
+      case 'o':                      // set offset
+                if ( B_have_arg ) {
+                  oset = strtol( myarg, NULL, 10 );
+                  if ( oset == 0 ) {
+                    oset = 4;
+                    optind--;
+                  }
+                } else oset = 4;
                 break;
 
       case 'd':                      // set debug level
@@ -359,6 +374,7 @@ int main(int argc, char *argv[]) {
   // 2020-12-07: adding '1' as buffer for double wide glyphs
   for ( int i=0; i<l_cnt; ++i ) max_len = MAX(max_len, lens[i] );
   max_len += wbuf;      // add spacing between columns
+  max_len += oset;
   min_len = max_len;
   for ( int i=0; i<l_cnt; ++i ) min_len = MIN(min_len, lens[i] > 1 ? lens[i]: min_len );
   for ( int i=0; i<l_cnt; ++i ) avg_len += lens[i];
@@ -393,6 +409,7 @@ int main(int argc, char *argv[]) {
 //    BUGOUT("%3d: %3d %3d :: %s\n", k, lens[i], col_sz[i], *(plines+k) );
     }
 //  BUGOUT( "%d: %3d\t", i, col_sz[i] );
+    if ( i==0) col_sz[0] += oset;
     if ( i>0 ) col_sz[i] += col_sz[i-1];
 //  STDOUT( "%3d\n", col_sz[i] )
   }
@@ -402,6 +419,7 @@ int main(int argc, char *argv[]) {
   plines = lines;
   int x;
   for ( int j=0, k=0; j<rows; ++j ) {
+    printf( "%*s", oset, "" );
     for ( int i=0; i<cols; ++i, ++k ) {
       x = j + ( i * rows );
 
