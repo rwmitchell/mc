@@ -263,10 +263,10 @@ int main(int argc, char *argv[]) {
             --optind;
             B_have_arg = false;
           } else {
-            BUGOUT("optional arg for %s is %s\n", longopts[longindex].name, optarg );
+//          BUGOUT("optional arg for %s is %s\n", longopts[longindex].name, optarg );
 
             strcpy(myarg, optarg);
-            BUGOUT("optarg = %c(%s)\n", *optarg, myarg);
+//          BUGOUT("optarg = %c(%s)\n", *optarg, myarg);
           }
           break;
       }
