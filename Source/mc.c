@@ -31,7 +31,8 @@ int  debug =  0,
      wdth  = 80,
      wbuf  =  3,    // white spacing between columns
      Mcol  =  9,    // Max columns
-     oset  =  0;    // offset first column
+     oset  =  0,    // offset first column
+     Rx    =  1;    // rows to be evenly divisible by
 
 bool B_strip = false,   // strip and columnize
      B_onlys = false,   // strip only
@@ -201,13 +202,14 @@ int main(int argc, char *argv[]) {
   extern char *optarg;
 
   const
-  char *opts=":bc:C:m:o:sd:Sw:uh1";      // Leading : makes all :'s optional
+  char *opts=":bc:C:m:o:R:sd:Sw:uh1";      // Leading : makes all :'s optional
   static struct option longopts[] = {
     { "big",             no_argument, NULL, 'b' },  // use columns if input > term rows
     { "minimum",   required_argument, NULL, 'm' },  // minimum lines to split
     { "colbuf",    required_argument, NULL, 'c' },  // Spacing between columns
     { "maxcols",   required_argument, NULL, 'C' },  // Max columns
     { "offset",    optional_argument, NULL, 'o' },  // offset first column
+    { "rows",      optional_argument, NULL, 'R' },  // Set rows to a multiple
     { "strip",           no_argument, NULL, 's' },
     { "debug",     optional_argument, NULL, 'd' },
     { "onlystrip",       no_argument, NULL, 'S' },
@@ -216,6 +218,7 @@ int main(int argc, char *argv[]) {
     { "help",            no_argument, NULL, 'h' },
     { "usage",           no_argument, NULL, 'u' },
     { "oneline",         no_argument, NULL, '1' },
+    { "even",            no_argument, NULL, '2' },  // 
     { NULL,                        0, NULL,  0  }
   };
 
@@ -248,6 +251,7 @@ int main(int argc, char *argv[]) {
     if ( optarg ) {                // only check if not null
       switch (opt) {               // check only args with possible STRING options
         case 'o':
+        case 'R':
         case 'd':
           if ( *optarg == '\0' ) {
             BUGOUT("optarg is empty\n");
@@ -282,6 +286,8 @@ int main(int argc, char *argv[]) {
           case 'd': debug += dinc; /* BUGOUT("debug level: %d\n", debug ); */ dinc <<= 1; break;
           case 'o': oset   =     4;
                     break;
+          case 'R': Rx     =     2;
+                    break;
           default : BUGOUT("No arg for %c\n", optopt ); break;
         }
         break;
@@ -312,6 +318,16 @@ int main(int argc, char *argv[]) {
                     optind--;
                   }
                 } else oset = 4;
+                break;
+
+      case 'R':                      // set Rx ( row multiplier )
+                if ( B_have_arg ) {
+                  Rx = strtol( myarg, NULL, 10 );
+                  if ( Rx == 0 ) {
+                    Rx = 2;
+                    optind--;
+                  }
+                } else Rx = 2;
                 break;
 
       case 'd':                      // set debug level
@@ -400,7 +416,14 @@ int main(int argc, char *argv[]) {
   }
 
   if ( debug )
-    BUGOUT( "%d:cols  %d:rows\n", cols, rows );
+    BUGOUT( "%d:cols  %d:rows   %d:Rx\n", cols, rows, Rx );
+
+  // This needs a better formula, not sure what it is
+  // Goal is to get a clean greenbar for function lsgb
+  if ( Rx > 1) rows = ( (rows / (double) Rx) + .5 ) * Rx;
+
+  if ( debug )
+    BUGOUT( "%d:cols  %d:rows   %d:Rx\n", cols, rows, Rx );
 
 //plines = lines;                      // only used if BUGOUT is reenabled
   for ( int i=0, k=0; i<cols; ++i ) {
